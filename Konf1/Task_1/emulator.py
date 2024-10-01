@@ -13,6 +13,25 @@ def startConsole():
         process_command(command)
 
 
+def tail(file_path, lines=10):
+    with open(file_path, 'rb') as f:
+        f.seek(0, 2)
+        file_size = f.tell()
+
+        block_size = 1024
+        blocks = -1
+        data = []
+        while len(data) < lines and file_size > 0:
+            if (file_size - block_size * abs(blocks)) < 0:
+                f.seek(0)
+            else:
+                f.seek(blocks * block_size, 2)
+            data = f.readlines()
+            blocks -= 1
+
+        return data[-lines:]
+
+
 def process_command(command):
     command_parts = command.split()
 
@@ -44,6 +63,25 @@ def process_command(command):
         elif system_type == "nt":
             os.system("powershell -Command \"[cultureinfo]::CurrentCulture = 'en-US'; "
                       "Get-Date -Format 'dddd MMMM dd HH:mm:ss K yyyy'\"")
+    elif cmd == "tail":
+        if len(command_parts) > 1:
+            try:
+                system_type = os.name
+                if system_type == "posix":
+                    os.system('tail')
+                elif system_type == "nt":
+                    command_parts.append("None")
+                    if command_parts[2] != "None":
+                        last_lines = tail(command_parts[1], int(command_parts[2]))
+                    else:
+                        last_lines = tail(command_parts[1])
+
+                    for line in last_lines:
+                        print(line.decode('utf-8').strip())
+            except FileNotFoundError:
+                print(f"No such file: {command_parts[1]}")
+        else:
+            print("Usage: tail <file>")
     else:
         print(f"Command not found: {cmd}")
 
