@@ -17,3 +17,26 @@
 Все функции эмулятора должны быть покрыты тестами, а для каждой из поддерживаемых команд необходимо написать 3 теста.
 
 
+# Описание всех функций и настроек
+
+* ls - Команда вывода содержимого данного каталога;
+* cd - Команда перехода к определённому каталогу;
+* pwd - Команда вывода пути до данного каталога;
+* exit - Команда для завершения процесса командной оболочки с кодом успешного завершения или кодом ошибки;
+* date - Команда вывода текущей даты;
+* tail - Команда вывода на экран последних 10 строк файла. Можно изменить количество выводимых строк.
+
+Для сборки проекта используется скрипт на Python packerZIP.py.
+
+# Результат работы программы
+
+
+![2024-10-01](https://github.com/user-attachments/assets/c2bc5334-0ac1-413f-b71f-da703a01eaa2)
+![2024-10-01 (1)](https://github.com/user-attachments/assets/4035b5b8-7592-4992-ad5b-4cc3994046bc)
+![2024-10-01 (2)](https://github.com/user-attachments/assets/1644e7e7-e194-4770-88fe-84c3c34bd6bf)
+![2024-10-01 (3)](https://github.com/user-attachments/assets/1a3176e3-6044-4402-a2ad-a93de7ca0bc8)
+![2024-10-01 (4)](https://github.com/user-attachments/assets/651b17db-da24-4653-8766-cd1a8bf0c543)
+![2024-10-01 (5)](https://github.com/user-attachments/assets/3eb6c7c0-b21c-441e-82fd-08549a587ca2)
+![2024-10-01 (6)](https://github.com/user-attachments/assets/b88d8058-645d-402f-8a3d-ae2ea8d81843)
+![2024-10-01 (7)](https://github.com/user-attachments/assets/a40716ff-56c9-45f6-b77b-b6a6e974dd34)
+![2024-10-01 (8)](https://github.com/user-attachments/assets/32315bbc-554c-42e5-88ab-900baec700a3)
