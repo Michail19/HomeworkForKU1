@@ -23,7 +23,7 @@ def process_command(command):
 
     if cmd == "ls":
         command_parts.append(" ")
-        if command_parts[1] == "-1":
+        if command_parts[1] == "-1" or command_parts[1] == "-l":
             print("\n".join(os.listdir(".")))
         else:
             print(" ".join(os.listdir(".")))
@@ -38,7 +38,12 @@ def process_command(command):
         else:
             print("Usage: cd <directory>")
     elif cmd == "date":
-        print(os.)
+        system_type = os.name
+        if system_type == "posix":
+            os.system('date')
+        elif system_type == "nt":
+            os.system("powershell -Command \"[cultureinfo]::CurrentCulture = 'en-US'; "
+                      "Get-Date -Format 'dddd MMMM dd HH:mm:ss K yyyy'\"")
     else:
         print(f"Command not found: {cmd}")
 
