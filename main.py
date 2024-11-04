@@ -1,34 +1,32 @@
-import unittest
 import os
 import tempfile
+import unittest
 from Task_1.emulator import process_command, tail
 
 class TestConsole(unittest.TestCase):
     def setUp(self):
-        self.test_dir = tempfile.TemporaryDirectory()
-        self.test_file = tempfile.NamedTemporaryFile(delete=False)
-        self.test_file.write(b"Line1\nLine2\nLine3\nLine4\nLine5\nLine6\nLine7\nLine8\nLine9\nLine10\n")
-        self.test_file.close()
+        self.project_root = os.path.abspath(os.path.dirname(__file__))
+
+        self.test_dir = tempfile.TemporaryDirectory(dir=self.project_root)
+
         os.chdir(self.test_dir.name)
 
     def tearDown(self):
+        os.chdir(self.project_root)
         self.test_dir.cleanup()
-        os.remove(self.test_file.name)
 
     # Тесты для команды ls
     def test_ls_command_single_file(self):
         with open("file1.txt", "w") as f:
             f.write("Content")
-        output = []
-        process_command("ls")
+        output = process_command("ls")
         self.assertIn("file1.txt", output)
 
     def test_ls_command_multiple_files(self):
         with open("file1.txt", "w") as f1, open("file2.txt", "w") as f2:
             f1.write("Content")
             f2.write("Content")
-        output = []
-        process_command("ls")
+        output = process_command("ls")
         self.assertIn("file1.txt", output)
         self.assertIn("file2.txt", output)
 
@@ -40,15 +38,13 @@ class TestConsole(unittest.TestCase):
     def test_ls_command_hidden_file(self):
         with open(".hiddenfile", "w") as f:
             f.write("Content")
-        output = []
-        process_command("ls")
+        output = process_command("ls")
         self.assertIn(".hiddenfile", output)
 
     def test_ls_command_long_format(self):
         with open("file1.txt", "w") as f:
             f.write("Content")
-        output = []
-        process_command("ls -l")
+        output = process_command("ls -l")
         self.assertIn("file1.txt", output)
 
     # Тесты для команды pwd
@@ -123,8 +119,7 @@ class TestConsole(unittest.TestCase):
 
     # Тесты для команды date
     def test_date_command_output_format(self):
-        output = []
-        process_command("date")
+        output = process_command("date")
         self.assertTrue(any("202" in line for line in output))
 
     def test_date_command_multiple_calls(self):
