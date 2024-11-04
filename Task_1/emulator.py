@@ -19,15 +19,15 @@ def tail(file_path, lines=10):
         file_size = f.tell()
 
         block_size = 1024
-        blocks = -1
-        data = []
-        while len(data) < lines and file_size > 0:
-            if (file_size - block_size * abs(blocks)) < 0:
-                f.seek(0)
-            else:
-                f.seek(blocks * block_size, 2)
-            data = f.readlines()
-            blocks -= 1
+
+        if (file_size - block_size) < 0:
+            f.seek(0)
+        else:
+            f.seek(-1 * block_size, 2)
+        data = f.readlines()
+
+        if len(data) < lines:
+            lines = len(data)
 
         return data[-lines:]
 
