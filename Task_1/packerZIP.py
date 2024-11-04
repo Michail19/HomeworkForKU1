@@ -9,10 +9,11 @@ def zip_directory(directory, zip_name):
         # Walk the directory tree and add files to the zip file
         for root, dirs, files in os.walk(directory):
             for file in files:
-                file_path = os.path.join(root, file)
-                # Add the file to the zip, maintaining the relative path inside the zip
-                arcname = os.path.relpath(file_path, start=directory)
-                zipf.write(file_path, arcname)
+                if file == "emulator.py" or file == "__main__.py":
+                    file_path = os.path.join(root, file)
+                    # Add the file to the zip, maintaining the relative path inside the zip
+                    arcname = os.path.relpath(file_path, start=directory)
+                    zipf.write(file_path, arcname)
     print(f'Directory {directory} has been packed into {zip_name}')
 
 
@@ -38,4 +39,4 @@ if __name__ == "__main__":
     main()
 
 
-# Example: python packerZIP.py D:\Python\Konf1 emulator.zip
+# Example: python packerZIP.py D:\Python\HomeworkForKU1\Task_1 emulator.zip
