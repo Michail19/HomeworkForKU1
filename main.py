@@ -3,6 +3,7 @@ import os
 import tempfile
 from Task_1.emulator import process_command, tail  # Импорт функций из вашего модуля
 
+
 class TestConsole(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.TemporaryDirectory()
@@ -152,11 +153,13 @@ class TestConsole(unittest.TestCase):
     # Тесты для команды tail
     def test_tail_command_last_5_lines(self):
         output = tail(self.test_file.name, 5)
-        self.assertEqual([line.decode('utf-8').strip() for line in output], ["Line6", "Line7", "Line8", "Line9", "Line10"])
+        self.assertEqual([line.decode('utf-8').strip() for line in output],
+                         ["Line6", "Line7", "Line8", "Line9", "Line10"])
 
     def test_tail_command_all_lines(self):
         output = tail(self.test_file.name, 10)
-        self.assertEqual([line.decode('utf-8').strip() for line in output], ["Line1", "Line2", "Line3", "Line4", "Line5", "Line6", "Line7", "Line8", "Line9", "Line10"])
+        self.assertEqual([line.decode('utf-8').strip() for line in output],
+                         ["Line1", "Line2", "Line3", "Line4", "Line5", "Line6", "Line7", "Line8", "Line9", "Line10"])
 
     def test_tail_command_more_than_file_lines(self):
         output = tail(self.test_file.name, 15)
@@ -196,6 +199,7 @@ class TestConsole(unittest.TestCase):
         output = []
         process_command("lsd")
         self.assertIn("Command not found", output[0])
+
 
 if __name__ == "__main__":
     unittest.main()
