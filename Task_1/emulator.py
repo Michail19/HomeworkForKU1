@@ -2,6 +2,7 @@ import os
 import zipfile
 from datetime import datetime
 
+
 # Простая виртуальная файловая система
 class VirtualFileSystem:
     def __init__(self, zip_file_path):
