@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime
 from unittest.mock import patch, MagicMock
 
 from Task_1.emulator import VirtualFileSystem, VirtualShell
@@ -89,3 +90,91 @@ class TestVirtualFileSystem(unittest.TestCase):
 
         # Здесь нет необходимости ловить исключение, достаточно проверить, что метод завершился
         mock_input.assert_called_with('/ # ')  # Проверим, что input был вызван с правильным приглашением
+
+    @patch('builtins.print')  # Мокаем print, чтобы не выводить в консоль
+    def test_date(self, mock_print):
+        vfs = MagicMock()  # Мокаем виртуальную файловую систему
+        shell = VirtualShell(vfs)
+
+        # Пытаемся вызвать команду 'date'
+        shell.process_command("date")
+
+        # Получаем текущую дату и проверяем, что она выведена в нужном формате
+        now = datetime.now().strftime("%a %b %d %H:%M:%S %Y")
+        mock_print.assert_called_with(now)  # Проверяем, что вызов print был с этим значением
+
+    @patch('builtins.print')
+    def test_tail(self, mock_print):
+        # Создаем моки для виртуальной файловой системы
+        vfs = MagicMock()
+        vfs.read_file.return_value = [
+            "Line 1",
+            "Line 2",
+            "Line 3",
+            "Line 4",
+            "Line 5",
+        ]  # Содержимое файла
+
+        shell = VirtualShell(vfs)
+
+        # Пытаемся вызвать команду 'tail' с аргументом на количество строк
+        shell.process_command("tail test_file 3")
+
+        # Проверяем, что выведены последние 3 строки
+        mock_print.assert_any_call("Line 3")
+        mock_print.assert_any_call("Line 4")
+        mock_print.assert_any_call("Line 5")
+
+    @patch('builtins.print')
+    def test_tail_invalid_file(self, mock_print):
+        # Создаем моки для виртуальной файловой системы
+        vfs = MagicMock()
+        vfs.read_file.side_effect = FileNotFoundError("No such file: test_file")
+
+        shell = VirtualShell(vfs)
+
+        # Пытаемся вызвать команду 'tail' с несуществующим файлом
+        shell.process_command("tail test_file 3")
+
+        # Проверяем, что ошибка была выведена (строка содержит текст исключения)
+        mock_print.assert_called_with("No such file: test_file")
+
+    @patch('builtins.print')
+    def test_tail_invalid_args(self, mock_print):
+        # Создаем моки для виртуальной файловой системы
+        vfs = MagicMock()
+        shell = VirtualShell(vfs)
+
+        # Пытаемся вызвать команду 'tail' с недостаточным количеством аргументов
+        shell.process_command("tail")
+
+        # Проверяем, что выводится сообщение об ошибке
+        mock_print.assert_called_with("Usage: tail <file> [lines]")
+
+    @patch('builtins.print')
+    def test_tail_default_lines(self, mock_print):
+        # Создаем моки для виртуальной файловой системы
+        vfs = MagicMock()
+        vfs.read_file.return_value = [
+            "Line 1",
+            "Line 2",
+            "Line 3",
+            "Line 4",
+            "Line 5",
+        ]
+
+        shell = VirtualShell(vfs)
+
+        # Пытаемся вызвать команду 'tail' без указания количества строк (должно быть 10 по умолчанию)
+        shell.process_command("tail test_file")
+
+        # Проверяем, что выведены последние 10 строк (в нашем случае это все 5 строк)
+        mock_print.assert_any_call("Line 1")
+        mock_print.assert_any_call("Line 2")
+        mock_print.assert_any_call("Line 3")
+        mock_print.assert_any_call("Line 4")
+        mock_print.assert_any_call("Line 5")
+
+
+if __name__ == "__main__":
+    unittest.main()
