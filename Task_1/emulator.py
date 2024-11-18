@@ -1,4 +1,3 @@
-import os
 import zipfile
 
 
@@ -73,10 +72,41 @@ class VirtualShell:
                     self.vfs.change_dir(parts[1])
                 else:
                     print("Usage: cd <directory>")
+<<<<<<< Updated upstream
+=======
+            elif cmd == "tail":
+                self.handle_tail(parts)
+            elif cmd == "date":
+                self.handle_date()
+>>>>>>> Stashed changes
             else:
                 print(f"Command not found: {cmd}")
         except Exception as e:
             print(f"Error: {e}")
+<<<<<<< Updated upstream
+=======
+
+    def handle_tail(self, parts):
+        """Обрабатывает команду tail."""
+        if len(parts) < 2:
+            print("Usage: tail <file> [lines]")
+            return
+
+        file_name = parts[1]
+        lines = int(parts[2]) if len(parts) > 2 else 10
+
+        try:
+            file_content = self.vfs.read_file(file_name)
+            for line in file_content[-lines:]:
+                print(line)
+        except FileNotFoundError as e:
+            print(e)
+
+    def handle_date(self):
+        """Обрабатывает команду date."""
+        now = datetime.now()
+        print(now.strftime("%a %b %d %H:%M:%S %Y"))
+>>>>>>> Stashed changes
 
 
 if __name__ == "__main__":
