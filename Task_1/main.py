@@ -69,14 +69,16 @@ class TestVirtualFileSystem(unittest.TestCase):
         shell.process_command('cd dir1')
         self.assertEqual(vfs.current_dir, '/dir1')
 
-    @patch('builtins.print')
+    @patch("builtins.print")
     def test_cd_invalid(self, mock_print):
-        vfs = VirtualFileSystem('VirtualDevice.zip')
-        vfs.fs = {'dir1': {'file1.txt': None}}
-        vfs.current_dir = '/'
+        vfs = MagicMock()
+        vfs.list_dir.return_value = []
+        vfs.change_dir.side_effect = FileNotFoundError("No such directory: nonexistent_dir")
+
         shell = VirtualShell(vfs)
-        shell.process_command('cd nonexistent_dir')
-        mock_print.assert_called_with('Error: No such directory: nonexistent_dir')
+        shell.process_command("cd nonexistent_dir")
+
+        mock_print.assert_called_with("No such directory: nonexistent_dir")
 
     @patch('builtins.input', return_value='exit')  # Мокаем input, чтобы сразу вернулся 'exit'
     @patch('builtins.print')  # Мокаем print, чтобы не выводить лишнее в тестах
@@ -125,18 +127,14 @@ class TestVirtualFileSystem(unittest.TestCase):
         mock_print.assert_any_call("Line 4")
         mock_print.assert_any_call("Line 5")
 
-    @patch('builtins.print')
+    @patch("builtins.print")
     def test_tail_invalid_file(self, mock_print):
-        # Создаем моки для виртуальной файловой системы
         vfs = MagicMock()
         vfs.read_file.side_effect = FileNotFoundError("No such file: test_file")
 
         shell = VirtualShell(vfs)
-
-        # Пытаемся вызвать команду 'tail' с несуществующим файлом
         shell.process_command("tail test_file 3")
 
-        # Проверяем, что ошибка была выведена (строка содержит текст исключения)
         mock_print.assert_called_with("No such file: test_file")
 
     @patch('builtins.print')

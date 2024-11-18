@@ -89,6 +89,8 @@ class VirtualShell:
                 self.handle_date()
             else:
                 print(f"Command not found: {cmd}")
+        except FileNotFoundError as e:
+            print(str(e))  # Преобразуем объект исключения в строку
         except Exception as e:
             print(f"Error: {e}")
 
@@ -106,7 +108,7 @@ class VirtualShell:
             for line in file_content[-lines:]:
                 print(line)
         except FileNotFoundError as e:
-            print(e)
+            print(str(e))  # Преобразуем объект исключения в строку
 
     def handle_date(self):
         """Обрабатывает команду date."""
