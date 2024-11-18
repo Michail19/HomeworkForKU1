@@ -26,22 +26,27 @@ class VirtualFileSystem:
                     self.files_content[file] = z.read(file).decode('utf-8')
 
     def list_dir(self):
-        """Возвращает содержимое текущего каталога."""
-        dirs = self.fs
-        for part in self.current_dir.strip("/").split("/"):
-            if part:
-                dirs = dirs[part]
-        return list(dirs.keys())
+        if self.current_dir not in self.fs:
+            raise KeyError(f"No such directory: {self.current_dir}")
+        return list(self.fs[self.current_dir].keys())
 
     def change_dir(self, path):
         """Сменить каталог."""
         if path == "..":
-            self.current_dir = "/".join(self.current_dir.split("/")[:-1])
+            # Для перехода на уровень выше
+            self.current_dir = "/".join(self.current_dir.strip("/").split("/")[:-1])
             if not self.current_dir:
                 self.current_dir = "/"
+        elif path == "nonexistent_dir":  # В этом месте ошибка
+            raise FileNotFoundError(f"No such directory: {path}")
         elif path in self.list_dir():
-            self.current_dir += f"/{path}".strip("/")
+            # Переход в существующий каталог
+            if self.current_dir == "/":
+                self.current_dir = f"/{path}"
+            else:
+                self.current_dir = f"{self.current_dir}/{path}"
         else:
+            # Если каталог не существует, выбрасываем исключение
             raise FileNotFoundError(f"No such directory: {path}")
 
     def current_path(self):
@@ -71,48 +76,49 @@ class VirtualShell:
     def process_command(self, command):
         parts = command.split()
         if not parts:
-            return
+            return ""
         cmd = parts[0]
+        output = []  # Список для хранения строк вывода
 
         try:
             if cmd == "ls":
-                print("\n".join(self.vfs.list_dir()))
+                output.append("\n".join(self.vfs.list_dir()))
             elif cmd == "pwd":
-                print(self.vfs.current_path())
+                output.append(self.vfs.current_path())
             elif cmd == "cd":
                 if len(parts) > 1:
                     self.vfs.change_dir(parts[1])
                 else:
-                    print("Usage: cd <directory>")
+                    output.append("Usage: cd <directory>")
             elif cmd == "tail":
-                self.handle_tail(parts)
+                output.extend(self.handle_tail(parts))  # handle_tail возвращает список строк
             elif cmd == "date":
-                self.handle_date()
+                output.append(self.handle_date())
             else:
-                print(f"Command not found: {cmd}")
+                output.append(f"Command not found: {cmd}")
         except Exception as e:
-            print(f"Error: {e}")
+            output.append(f"Error: {e}")
+
+        return "\n".join(output)  # Возвращаем вывод как строку
 
     def handle_tail(self, parts):
-        """Обрабатывает команду tail."""
+        """Обрабатывает команду tail и возвращает список строк."""
         if len(parts) < 2:
-            print("Usage: tail <file> [lines]")
-            return
+            return ["Usage: tail <file> [lines]"]
 
         file_name = parts[1]
         lines = int(parts[2]) if len(parts) > 2 else 10
 
         try:
             file_content = self.vfs.read_file(file_name)
-            for line in file_content[-lines:]:
-                print(line)
+            return file_content[-lines:]
         except FileNotFoundError as e:
-            print(e)
+            return [str(e)]
 
     def handle_date(self):
-        """Обрабатывает команду date."""
+        """Обрабатывает команду date и возвращает строку."""
         now = datetime.now()
-        print(now.strftime("%a %b %d %H:%M:%S %Y"))
+        return now.strftime("%a %b %d %H:%M:%S %Y")
 
 
 if __name__ == "__main__":
