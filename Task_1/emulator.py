@@ -1,90 +1,85 @@
-#!/usr/bin/env python
 import os
+import zipfile
 
 
-def startConsole():
-    while True:
-        current_dir = os.getcwd()
-        command = input(f'{current_dir} # ')
+# Простая виртуальная файловая система
+class VirtualFileSystem:
+    def __init__(self, zip_file_path):
+        self.zip_file_path = zip_file_path
+        self.current_dir = "/"
+        self.fs = {}  # Виртуальная файловая система в памяти
+        self.load_zip()
 
-        if command.strip() == 'exit':
-            break
+    def load_zip(self):
+        """Загружает файловую систему из zip-архива."""
+        with zipfile.ZipFile(self.zip_file_path, 'r') as z:
+            for file in z.namelist():
+                parts = file.split('/')
+                d = self.fs
+                for part in parts[:-1]:
+                    d = d.setdefault(part, {})
+                if parts[-1]:
+                    d[parts[-1]] = None  # Файлы как None
 
-        process_command(command)
+    def list_dir(self):
+        """Возвращает содержимое текущего каталога."""
+        dirs = self.fs
+        for part in self.current_dir.strip("/").split("/"):
+            if part:
+                dirs = dirs[part]
+        return list(dirs.keys())
 
-
-def tail(file_path, lines=10):
-    with open(file_path, 'rb') as f:
-        f.seek(0, 2)
-        file_size = f.tell()
-
-        block_size = 1024
-
-        if (file_size - block_size) < 0:
-            f.seek(0)
+    def change_dir(self, path):
+        """Сменить каталог."""
+        if path == "..":
+            self.current_dir = "/".join(self.current_dir.split("/")[:-1])
+            if not self.current_dir:
+                self.current_dir = "/"
+        elif path in self.list_dir():
+            self.current_dir += f"/{path}".strip("/")
         else:
-            f.seek(-1 * block_size, 2)
-        data = f.readlines()
+            raise FileNotFoundError(f"No such directory: {path}")
 
-        if len(data) < lines:
-            lines = len(data)
-
-        return data[-lines:]
+    def current_path(self):
+        """Возвращает текущий путь."""
+        return self.current_dir
 
 
-def process_command(command):
-    command_parts = command.split()
+# Командная оболочка
+class VirtualShell:
+    def __init__(self, vfs):
+        self.vfs = vfs
 
-    if len(command_parts) == 0:
-        return
+    def start(self):
+        while True:
+            command = input(f"{self.vfs.current_path()} # ")
+            if command.strip() == "exit":
+                break
+            self.process_command(command)
 
-    cmd = command_parts[0]
+    def process_command(self, command):
+        parts = command.split()
+        if not parts:
+            return
+        cmd = parts[0]
 
-    if cmd == "ls":
-        command_parts.append(" ")
-        if command_parts[1] == "-1" or command_parts[1] == "-l":
-            print("\n".join(os.listdir(".")))
-        else:
-            print(" ".join(os.listdir(".")))
-    elif cmd == "pwd":
-        print(os.getcwd())
-    elif cmd == "cd":
-        if len(command_parts) > 1:
-            try:
-                os.chdir(command_parts[1])
-            except FileNotFoundError:
-                print(f"No such directory: {command_parts[1]}")
-        else:
-            print("Usage: cd <directory>")
-    elif cmd == "date":
-        system_type = os.name
-        if system_type == "posix":
-            os.system('date')
-        elif system_type == "nt":
-            os.system("powershell -Command \"[cultureinfo]::CurrentCulture = 'en-US'; "
-                      "Get-Date -Format 'dddd MMMM dd HH:mm:ss K yyyy'\"")
-    elif cmd == "tail":
-        if len(command_parts) > 1:
-            try:
-                system_type = os.name
-                if system_type == "posix":
-                    os.system('tail')
-                elif system_type == "nt":
-                    command_parts.append("None")
-                    if command_parts[2] != "None":
-                        last_lines = tail(command_parts[1], int(command_parts[2]))
-                    else:
-                        last_lines = tail(command_parts[1])
-
-                    for line in last_lines:
-                        print(line.decode('utf-8').strip())
-            except FileNotFoundError:
-                print(f"No such file: {command_parts[1]}")
-        else:
-            print("Usage: tail <file>")
-    else:
-        print(f"Command not found: {cmd}")
+        try:
+            if cmd == "ls":
+                print("\n".join(self.vfs.list_dir()))
+            elif cmd == "pwd":
+                print(self.vfs.current_path())
+            elif cmd == "cd":
+                if len(parts) > 1:
+                    self.vfs.change_dir(parts[1])
+                else:
+                    print("Usage: cd <directory>")
+            else:
+                print(f"Command not found: {cmd}")
+        except Exception as e:
+            print(f"Error: {e}")
 
 
 if __name__ == "__main__":
-    startConsole()
+    vfs = VirtualFileSystem("VirtualDevice.zip")
+    shell = VirtualShell(vfs)
+    shell.start()
