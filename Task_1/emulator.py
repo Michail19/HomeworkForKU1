@@ -1,4 +1,3 @@
-import os
 import zipfile
 from datetime import datetime
 
@@ -26,27 +25,22 @@ class VirtualFileSystem:
                     self.files_content[file] = z.read(file).decode('utf-8')
 
     def list_dir(self):
-        if self.current_dir not in self.fs:
-            raise KeyError(f"No such directory: {self.current_dir}")
-        return list(self.fs[self.current_dir].keys())
+        """Возвращает содержимое текущего каталога."""
+        dirs = self.fs
+        for part in self.current_dir.strip("/").split("/"):
+            if part:
+                dirs = dirs[part]
+        return list(dirs.keys())
 
     def change_dir(self, path):
         """Сменить каталог."""
         if path == "..":
-            # Для перехода на уровень выше
-            self.current_dir = "/".join(self.current_dir.strip("/").split("/")[:-1])
+            self.current_dir = "/".join(self.current_dir.split("/")[:-1])
             if not self.current_dir:
                 self.current_dir = "/"
-        elif path == "nonexistent_dir":  # В этом месте ошибка
-            raise FileNotFoundError(f"No such directory: {path}")
         elif path in self.list_dir():
-            # Переход в существующий каталог
-            if self.current_dir == "/":
-                self.current_dir = f"/{path}"
-            else:
-                self.current_dir = f"{self.current_dir}/{path}"
+            self.current_dir += f"/{path}".strip("/")
         else:
-            # Если каталог не существует, выбрасываем исключение
             raise FileNotFoundError(f"No such directory: {path}")
 
     def current_path(self):
@@ -76,49 +70,50 @@ class VirtualShell:
     def process_command(self, command):
         parts = command.split()
         if not parts:
-            return ""
+            return
         cmd = parts[0]
-        output = []  # Список для хранения строк вывода
 
         try:
             if cmd == "ls":
-                output.append("\n".join(self.vfs.list_dir()))
+                print("\n".join(self.vfs.list_dir()))
             elif cmd == "pwd":
-                output.append(self.vfs.current_path())
+                print(self.vfs.current_path())
             elif cmd == "cd":
                 if len(parts) > 1:
                     self.vfs.change_dir(parts[1])
                 else:
-                    output.append("Usage: cd <directory>")
+                    print("Usage: cd <directory>")
             elif cmd == "tail":
-                output.extend(self.handle_tail(parts))  # handle_tail возвращает список строк
+                self.handle_tail(parts)
             elif cmd == "date":
-                output.append(self.handle_date())
+                self.handle_date()
             else:
-                output.append(f"Command not found: {cmd}")
+                print(f"Command not found: {cmd}")
+        except FileNotFoundError as e:
+            print(str(e))  # Преобразуем объект исключения в строку
         except Exception as e:
-            output.append(f"Error: {e}")
-
-        return "\n".join(output)  # Возвращаем вывод как строку
+            print(f"Error: {e}")
 
     def handle_tail(self, parts):
-        """Обрабатывает команду tail и возвращает список строк."""
+        """Обрабатывает команду tail."""
         if len(parts) < 2:
-            return ["Usage: tail <file> [lines]"]
+            print("Usage: tail <file> [lines]")
+            return
 
         file_name = parts[1]
         lines = int(parts[2]) if len(parts) > 2 else 10
 
         try:
             file_content = self.vfs.read_file(file_name)
-            return file_content[-lines:]
+            for line in file_content[-lines:]:
+                print(line)
         except FileNotFoundError as e:
-            return [str(e)]
+            print(str(e))  # Преобразуем объект исключения в строку
 
     def handle_date(self):
-        """Обрабатывает команду date и возвращает строку."""
+        """Обрабатывает команду date."""
         now = datetime.now()
-        return now.strftime("%a %b %d %H:%M:%S %Y")
+        print(now.strftime("%a %b %d %H:%M:%S %Y"))
 
 
 if __name__ == "__main__":
