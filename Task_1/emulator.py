@@ -1,4 +1,5 @@
 import zipfile
+from datetime import datetime
 
 
 # Простая виртуальная файловая система
@@ -7,6 +8,7 @@ class VirtualFileSystem:
         self.zip_file_path = zip_file_path
         self.current_dir = "/"
         self.fs = {}  # Виртуальная файловая система в памяти
+        self.files_content = {}  # Содержимое файлов
         self.load_zip()
 
     def load_zip(self):
@@ -19,6 +21,8 @@ class VirtualFileSystem:
                     d = d.setdefault(part, {})
                 if parts[-1]:
                     d[parts[-1]] = None  # Файлы как None
+                    # Загрузим содержимое файла
+                    self.files_content[file] = z.read(file).decode('utf-8')
 
     def list_dir(self):
         """Возвращает содержимое текущего каталога."""
@@ -42,6 +46,13 @@ class VirtualFileSystem:
     def current_path(self):
         """Возвращает текущий путь."""
         return self.current_dir
+
+    def read_file(self, file_path):
+        """Читает содержимое файла."""
+        full_path = f"{self.current_dir.strip('/')}/{file_path}".strip("/")
+        if full_path in self.files_content:
+            return self.files_content[full_path].splitlines()
+        raise FileNotFoundError(f"No such file: {file_path}")
 
 
 # Командная оболочка
@@ -72,19 +83,14 @@ class VirtualShell:
                     self.vfs.change_dir(parts[1])
                 else:
                     print("Usage: cd <directory>")
-<<<<<<< Updated upstream
-=======
             elif cmd == "tail":
                 self.handle_tail(parts)
             elif cmd == "date":
                 self.handle_date()
->>>>>>> Stashed changes
             else:
                 print(f"Command not found: {cmd}")
         except Exception as e:
             print(f"Error: {e}")
-<<<<<<< Updated upstream
-=======
 
     def handle_tail(self, parts):
         """Обрабатывает команду tail."""
@@ -106,7 +112,6 @@ class VirtualShell:
         """Обрабатывает команду date."""
         now = datetime.now()
         print(now.strftime("%a %b %d %H:%M:%S %Y"))
->>>>>>> Stashed changes
 
 
 if __name__ == "__main__":
