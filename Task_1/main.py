@@ -77,9 +77,15 @@ class TestVirtualFileSystem(unittest.TestCase):
         shell.process_command('cd nonexistent_dir')
         mock_print.assert_called_with('Error: No such directory: nonexistent_dir')
 
-    @patch('builtins.input', return_value='exit')
-    def test_exit(self, mock_input):
+    @patch('builtins.input', return_value='exit')  # Мокаем input, чтобы сразу вернулся 'exit'
+    @patch('builtins.print')  # Мокаем print, чтобы не выводить лишнее в тестах
+    def test_exit(self, mock_print, mock_input):
         vfs = VirtualFileSystem('VirtualDevice.zip')
         shell = VirtualShell(vfs)
-        with self.assertRaises(StopIteration):
-            shell.start()
+
+        # Проверим, что метод start завершится без ошибок, как только введем 'exit'
+        # Метод должен выйти из цикла
+        shell.start()
+
+        # Здесь нет необходимости ловить исключение, достаточно проверить, что метод завершился
+        mock_input.assert_called_with('/ # ')  # Проверим, что input был вызван с правильным приглашением
