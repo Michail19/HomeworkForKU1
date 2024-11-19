@@ -1,5 +1,6 @@
 import zipfile
 from datetime import datetime
+import csv
 
 
 # Простая виртуальная файловая система
@@ -7,8 +8,8 @@ class VirtualFileSystem:
     def __init__(self, zip_file_path):
         self.zip_file_path = zip_file_path
         self.current_dir = "/"
-        self.fs = {}  # Виртуальная файловая система в памяти
-        self.files_content = {}  # Содержимое файлов
+        self.fs = {}
+        self.files_content = {}
         self.load_zip()
 
     def load_zip(self):
@@ -20,17 +21,19 @@ class VirtualFileSystem:
                 for part in parts[:-1]:
                     d = d.setdefault(part, {})
                 if parts[-1]:
-                    d[parts[-1]] = None  # Файлы как None
-                    # Загрузим содержимое файла
+                    d[parts[-1]] = None
                     self.files_content[file] = z.read(file).decode('utf-8')
 
     def list_dir(self):
-        """Возвращает содержимое текущего каталога."""
+        """Возвращает отсортированное содержимое текущего каталога с папками первыми."""
         dirs = self.fs
         for part in self.current_dir.strip("/").split("/"):
             if part:
                 dirs = dirs[part]
-        return list(dirs.keys())
+        # Разделяем на папки и файлы
+        folders = sorted([name for name in dirs.keys() if isinstance(dirs[name], dict)])
+        files = sorted([name for name in dirs.keys() if dirs[name] is None])
+        return folders + files
 
     def change_dir(self, path):
         """Сменить каталог."""
@@ -90,7 +93,7 @@ class VirtualShell:
             else:
                 print(f"Command not found: {cmd}")
         except FileNotFoundError as e:
-            print(str(e))  # Преобразуем объект исключения в строку
+            print(str(e))
         except Exception as e:
             print(f"Error: {e}")
 
@@ -108,7 +111,7 @@ class VirtualShell:
             for line in file_content[-lines:]:
                 print(line)
         except FileNotFoundError as e:
-            print(str(e))  # Преобразуем объект исключения в строку
+            print(str(e))
 
     def handle_date(self):
         """Обрабатывает команду date."""
@@ -116,7 +119,29 @@ class VirtualShell:
         print(now.strftime("%a %b %d %H:%M:%S %Y"))
 
 
+def load_config(config_file):
+    """Загружает конфигурацию из CSV файла."""
+    with open(config_file, mode='r', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        config = next(reader)
+    return config
+
+
 if __name__ == "__main__":
-    vfs = VirtualFileSystem("VirtualDevice.zip")
-    shell = VirtualShell(vfs)
+    config = load_config("config.csv")
+    username = config["username"]
+    computer_name = config["computer_name"]
+    zip_file_path = config["zip_file_path"]
+
+    vfs = VirtualFileSystem(zip_file_path)
+
+    class VirtualShellWithPrompt(VirtualShell):
+        def start(self):
+            while True:
+                command = input(f"{username}@{computer_name}:{self.vfs.current_path()} # ")
+                if command.strip() == "exit":
+                    break
+                self.process_command(command)
+
+    shell = VirtualShellWithPrompt(vfs)
     shell.start()
